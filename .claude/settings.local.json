@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(mitmdump:*)",
+      "Bash(pip install:*)",
+      "Bash(lsof:*)",
+      "Bash(python view_capture.py:*)",
+      "Bash(python export_capture.py:*)"
+    ]
+  }
+}
