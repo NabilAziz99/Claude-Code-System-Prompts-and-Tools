@@ -82,7 +82,8 @@ def export_to_txt(output_name: str = None):
     for i, tool in enumerate(tools, 1):
         name = tool.get("name", "unknown")
         desc = tool.get("description", "No description")
-        params = tool.get("parameters", {})
+        # Anthropic API tools use `input_schema`; fall back to `parameters`.
+        params = tool.get("input_schema", tool.get("parameters", {}))
 
         lines.append("")
         lines.append(f"{'='*40}")
@@ -94,6 +95,44 @@ def export_to_txt(output_name: str = None):
         lines.append("")
         lines.append("PARAMETERS SCHEMA:")
         lines.append(json.dumps(params, indent=2))
+
+    # Messages (where slash-command / skill instructions live, e.g. /security-review)
+    messages = data.get("messages", [])
+    lines.append("")
+    lines.append("-" * 80)
+    lines.append(f"MESSAGES ({len(messages)} total)")
+    lines.append("-" * 80)
+
+    def _render_content(content):
+        """Flatten a message's content (string or list of blocks) to text."""
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            parts = []
+            for block in content:
+                if isinstance(block, dict):
+                    btype = block.get("type", "?")
+                    if btype == "text":
+                        parts.append(block.get("text", ""))
+                    elif btype == "tool_use":
+                        parts.append(f"[tool_use: {block.get('name')}]\n"
+                                     + json.dumps(block.get("input", {}), indent=2))
+                    elif btype == "tool_result":
+                        parts.append("[tool_result]\n" + _render_content(block.get("content", "")))
+                    else:
+                        parts.append(f"[{btype}]\n" + json.dumps(block, indent=2))
+                else:
+                    parts.append(str(block))
+            return "\n".join(parts)
+        return json.dumps(content, indent=2)
+
+    for i, msg in enumerate(messages, 1):
+        role = msg.get("role", "?") if isinstance(msg, dict) else "?"
+        lines.append("")
+        lines.append(f"{'='*40}")
+        lines.append(f"MESSAGE {i} - role: {role}")
+        lines.append(f"{'='*40}")
+        lines.append(_render_content(msg.get("content", "") if isinstance(msg, dict) else msg))
 
     lines.append("")
     lines.append("=" * 80)

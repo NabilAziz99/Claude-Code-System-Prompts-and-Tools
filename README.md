@@ -37,7 +37,15 @@ claude_proxy/
 ```bash
 source env.sh
 claude "hello"
+
+# ...or pin a specific model to capture that model's prompt + tools:
+claude --model claude-fable-5 -p "say hi"      # Fable 5 (headless)
+claude --model claude-opus-4-8  -p "say hi"    # Opus 4.8 (headless)
 ```
+
+> `-p` runs Claude Code in headless/print mode — non-interactive and easy to script.
+> Interactive `claude` captures a richer tool set; headless mode sends a smaller
+> **deferred** tool set plus `ToolSearch`.
 
 ### Terminal 2 - View the captured data:
 ```bash
@@ -57,6 +65,17 @@ claude "hello"
 | `./run.sh view` | Export and open in text editor |
 | `./run.sh clean` | Remove all captured data |
 | `./run.sh help` | Show help message |
+
+## Captured Prompts
+
+Ready-to-read captures live in per-model folders:
+
+| Folder | Model | Contents |
+|--------|-------|----------|
+| [`fable/`](fable/) | `claude-fable-5` | System prompt, tools (readable + raw), full request |
+
+Each folder has its own README with capture details. Point Claude Code at a different
+model with `--model <id>` and re-run the proxy to add more.
 
 ## What Gets Captured
 
